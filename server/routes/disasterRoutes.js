@@ -1,60 +1,60 @@
 const express = require('express');
 const { body } = require('express-validator');
 const {
-  register,
-  login,
-  getMe,
-  getAllUsers,
-  toggleUserStatus,
-} = require('../controllers/authController');
+  createDisaster,
+  getAllDisasters,
+  getDisasterById,
+  updateDisaster,
+  updateDisasterStatus,
+  getDisasterSummary,
+} = require('../controllers/disasterController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
 
 const router = express.Router();
 
 // ─── Validation rules ───
-const registerValidation = [
-  body('name')
+const createDisasterValidation = [
+  body('title')
     .trim()
-    .notEmpty().withMessage('Name is required')
-    .isLength({ max: 100 }).withMessage('Name cannot exceed 100 characters'),
+    .notEmpty().withMessage('Title is required')
+    .isLength({ max: 200 }).withMessage('Title cannot exceed 200 characters'),
 
-  body('email')
+  body('type')
+    .notEmpty().withMessage('Type is required')
+    .isIn(['flood', 'earthquake', 'cyclone', 'fire', 'landslide', 'drought', 'other'])
+    .withMessage('Invalid disaster type'),
+
+  body('location')
     .trim()
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Please provide a valid email'),
+    .notEmpty().withMessage('Location is required'),
 
-  body('password')
-    .notEmpty().withMessage('Password is required')
-    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-
-  body('role')
+  body('severity')
     .optional()
-    .isIn(['citizen', 'volunteer', 'ngo', 'admin'])
-    .withMessage('Role must be one of: citizen, volunteer, ngo, admin'),
+    .isIn(['low', 'medium', 'high', 'critical'])
+    .withMessage('Severity must be low, medium, high, or critical'),
 
-  body('phone')
+  body('coordinates.lat')
     .optional()
-    .matches(/^[0-9]{10}$/).withMessage('Phone must be a valid 10-digit number'),
+    .isFloat({ min: -90, max: 90 })
+    .withMessage('Latitude must be between -90 and 90'),
+
+  body('coordinates.lng')
+    .optional()
+    .isFloat({ min: -180, max: 180 })
+    .withMessage('Longitude must be between -180 and 180'),
 ];
 
-const loginValidation = [
-  body('email')
-    .trim()
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Please provide a valid email'),
+// All routes require login
+router.use(protect);
 
-  body('password')
-    .notEmpty().withMessage('Password is required'),
-];
+// ─── Routes ───
+router.get('/', getAllDisasters);
+router.get('/:id', getDisasterById);
+router.get('/:id/summary', authorize('admin', 'ngo'), getDisasterSummary);
 
-// ─── Public Routes ───
-router.post('/register', registerValidation, register);
-router.post('/login', loginValidation, login);
-
-// ─── Protected Routes ───
-router.get('/me', protect, getMe);
-router.get('/users', protect, authorize('admin'), getAllUsers);
-router.patch('/users/:id/toggle', protect, authorize('admin'), toggleUserStatus);
+router.post('/', authorize('admin'), createDisasterValidation, createDisaster);
+router.patch('/:id', authorize('admin'), createDisasterValidation, updateDisaster);
+router.patch('/:id/status', authorize('admin'), updateDisasterStatus);
 
 module.exports = router;
