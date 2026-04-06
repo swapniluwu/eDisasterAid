@@ -1,60 +1,74 @@
 const express = require('express');
 const { body } = require('express-validator');
 const {
-  register,
-  login,
-  getMe,
-  getAllUsers,
-  toggleUserStatus,
-} = require('../controllers/authController');
+  registerVictim,
+  getAllVictims,
+  getMyRegistrations,
+  getVictimById,
+  getPriorityQueue,
+  verifyVictim,
+  rescoreVictim,
+} = require('../controllers/victimController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
 
 const router = express.Router();
 
 // ─── Validation rules ───
-const registerValidation = [
+const registerVictimValidation = [
+  body('disasterId')
+    .notEmpty().withMessage('Disaster ID is required')
+    .isMongoId().withMessage('Invalid disaster ID'),
+
   body('name')
     .trim()
-    .notEmpty().withMessage('Name is required')
-    .isLength({ max: 100 }).withMessage('Name cannot exceed 100 characters'),
-
-  body('email')
-    .trim()
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Please provide a valid email'),
-
-  body('password')
-    .notEmpty().withMessage('Password is required')
-    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-
-  body('role')
-    .optional()
-    .isIn(['citizen', 'volunteer', 'ngo', 'admin'])
-    .withMessage('Role must be one of: citizen, volunteer, ngo, admin'),
+    .notEmpty().withMessage('Name is required'),
 
   body('phone')
-    .optional()
+    .notEmpty().withMessage('Phone number is required')
     .matches(/^[0-9]{10}$/).withMessage('Phone must be a valid 10-digit number'),
-];
 
-const loginValidation = [
-  body('email')
+  body('address')
     .trim()
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Please provide a valid email'),
+    .notEmpty().withMessage('Address is required'),
 
-  body('password')
-    .notEmpty().withMessage('Password is required'),
+  body('familySize')
+    .notEmpty().withMessage('Family size is required')
+    .isInt({ min: 1, max: 50 }).withMessage('Family size must be between 1 and 50'),
+
+  body('severity')
+    .notEmpty().withMessage('Severity is required')
+    .isInt({ min: 1, max: 5 }).withMessage('Severity must be between 1 and 5'),
+
+  body('hasElderly')
+    .optional()
+    .isBoolean().withMessage('hasElderly must be true or false'),
+
+  body('hasChildren')
+    .optional()
+    .isBoolean().withMessage('hasChildren must be true or false'),
+
+  body('requiredItems')
+    .optional()
+    .isArray().withMessage('Required items must be an array'),
 ];
 
-// ─── Public Routes ───
-router.post('/register', registerValidation, register);
-router.post('/login', loginValidation, login);
+// All routes require login
+router.use(protect);
 
-// ─── Protected Routes ───
-router.get('/me', protect, getMe);
-router.get('/users', protect, authorize('admin'), getAllUsers);
-router.patch('/users/:id/toggle', protect, authorize('admin'), toggleUserStatus);
+// ─── Routes ───
+
+// Citizen routes
+router.post('/register', authorize('citizen'), registerVictimValidation, registerVictim);
+router.get('/my-registrations', authorize('citizen'), getMyRegistrations);
+
+// Admin routes
+router.get('/', authorize('admin'), getAllVictims);
+router.get('/priority/:disasterId', authorize('admin'), getPriorityQueue);
+router.patch('/:id/verify', authorize('admin'), verifyVictim);
+router.patch('/:id/rescore', authorize('admin'), rescoreVictim);
+
+// Admin + citizen (own record)
+router.get('/:id', authorize('admin', 'citizen'), getVictimById);
 
 module.exports = router;
