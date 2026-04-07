@@ -62,12 +62,12 @@ const userSchema = new mongoose.Schema(
 );
 
 // ─── Hash password before saving ───
-// This runs on create AND on save if password was modified
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+// This runs on create AND on save if password was modified.
+// In Mongoose 9+, async middleware is promise-based (no next callback).
+userSchema.pre('save', async function () {
+  if (!this.isModified('password')) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 // ─── Instance method: compare entered password with hashed ───
