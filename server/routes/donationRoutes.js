@@ -1,60 +1,69 @@
 const express = require('express');
 const { body } = require('express-validator');
 const {
-  register,
-  login,
-  getMe,
-  getAllUsers,
-  toggleUserStatus,
-} = require('../controllers/authController');
+  logDonation,
+  getMyDonations,
+  getDonationsByDisaster,
+  getDonationReceipt,
+  confirmDonationArrival,
+} = require('../controllers/donationController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
 
 const router = express.Router();
 
 // ─── Validation rules ───
-const registerValidation = [
-  body('name')
+const donationValidation = [
+  body('disasterId')
+    .notEmpty().withMessage('Disaster ID is required')
+    .isMongoId().withMessage('Invalid disaster ID'),
+
+  body('itemName')
     .trim()
-    .notEmpty().withMessage('Name is required')
-    .isLength({ max: 100 }).withMessage('Name cannot exceed 100 characters'),
+    .notEmpty().withMessage('Item name is required')
+    .isLength({ max: 100 }).withMessage('Item name cannot exceed 100 characters'),
 
-  body('email')
-    .trim()
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Please provide a valid email'),
-
-  body('password')
-    .notEmpty().withMessage('Password is required')
-    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-
-  body('role')
+  body('category')
     .optional()
-    .isIn(['citizen', 'volunteer', 'ngo', 'admin'])
-    .withMessage('Role must be one of: citizen, volunteer, ngo, admin'),
+    .isIn(['food', 'water', 'medicine', 'clothing', 'shelter', 'hygiene', 'other'])
+    .withMessage('Invalid category'),
 
-  body('phone')
+  body('quantity')
+    .notEmpty().withMessage('Quantity is required')
+    .isFloat({ min: 1 }).withMessage('Quantity must be at least 1'),
+
+  body('unit')
+    .notEmpty().withMessage('Unit is required')
+    .isIn(['kg', 'litre', 'piece', 'box', 'packet', 'bottle'])
+    .withMessage('Unit must be one of: kg, litre, piece, box, packet, bottle'),
+
+  body('expiryDate')
     .optional()
-    .matches(/^[0-9]{10}$/).withMessage('Phone must be a valid 10-digit number'),
+    .isISO8601().withMessage('Expiry date must be a valid date'),
+
+  body('estimatedArrival')
+    .optional()
+    .isISO8601().withMessage('Estimated arrival must be a valid date'),
 ];
 
-const loginValidation = [
-  body('email')
-    .trim()
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Please provide a valid email'),
-
-  body('password')
-    .notEmpty().withMessage('Password is required'),
+const confirmArrivalValidation = [
+  body('arrivedQuantity')
+    .notEmpty().withMessage('Arrived quantity is required')
+    .isFloat({ min: 1 }).withMessage('Arrived quantity must be at least 1'),
 ];
 
-// ─── Public Routes ───
-router.post('/register', registerValidation, register);
-router.post('/login', loginValidation, login);
+// All routes require login
+router.use(protect);
 
-// ─── Protected Routes ───
-router.get('/me', protect, getMe);
-router.get('/users', protect, authorize('admin'), getAllUsers);
-router.patch('/users/:id/toggle', protect, authorize('admin'), toggleUserStatus);
+// ─── Routes ───
+
+// NGO routes
+router.post('/', authorize('ngo'), donationValidation, logDonation);
+router.get('/my-donations', authorize('ngo'), getMyDonations);
+router.get('/receipt/:itemId', authorize('ngo', 'admin'), getDonationReceipt);
+
+// Admin routes
+router.get('/disaster/:disasterId', authorize('admin'), getDonationsByDisaster);
+router.patch('/confirm/:itemId', authorize('admin'), confirmArrivalValidation, confirmDonationArrival);
 
 module.exports = router;
