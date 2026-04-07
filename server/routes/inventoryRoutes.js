@@ -1,60 +1,69 @@
 const express = require('express');
 const { body } = require('express-validator');
 const {
-  register,
-  login,
-  getMe,
-  getAllUsers,
-  toggleUserStatus,
-} = require('../controllers/authController');
+  addInventoryItem,
+  getInventoryByDisaster,
+  getInventoryItemById,
+  updateInventoryItem,
+  restockItem,
+  deleteInventoryItem,
+  getStockAlerts,
+} = require('../controllers/inventoryController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
 
 const router = express.Router();
 
 // ─── Validation rules ───
-const registerValidation = [
-  body('name')
+const addItemValidation = [
+  body('disasterId')
+    .notEmpty().withMessage('Disaster ID is required')
+    .isMongoId().withMessage('Invalid disaster ID'),
+
+  body('itemName')
     .trim()
-    .notEmpty().withMessage('Name is required')
-    .isLength({ max: 100 }).withMessage('Name cannot exceed 100 characters'),
+    .notEmpty().withMessage('Item name is required')
+    .isLength({ max: 100 }).withMessage('Item name cannot exceed 100 characters'),
 
-  body('email')
-    .trim()
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Please provide a valid email'),
-
-  body('password')
-    .notEmpty().withMessage('Password is required')
-    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-
-  body('role')
+  body('category')
     .optional()
-    .isIn(['citizen', 'volunteer', 'ngo', 'admin'])
-    .withMessage('Role must be one of: citizen, volunteer, ngo, admin'),
+    .isIn(['food', 'water', 'medicine', 'clothing', 'shelter', 'hygiene', 'other'])
+    .withMessage('Invalid category'),
 
-  body('phone')
+  body('quantity')
+    .notEmpty().withMessage('Quantity is required')
+    .isFloat({ min: 0 }).withMessage('Quantity must be 0 or greater'),
+
+  body('unit')
+    .notEmpty().withMessage('Unit is required')
+    .isIn(['kg', 'litre', 'piece', 'box', 'packet', 'bottle'])
+    .withMessage('Unit must be one of: kg, litre, piece, box, packet, bottle'),
+
+  body('lowStockThreshold')
     .optional()
-    .matches(/^[0-9]{10}$/).withMessage('Phone must be a valid 10-digit number'),
+    .isFloat({ min: 0 }).withMessage('Low stock threshold must be 0 or greater'),
+
+  body('expiryDate')
+    .optional()
+    .isISO8601().withMessage('Expiry date must be a valid date'),
 ];
 
-const loginValidation = [
-  body('email')
-    .trim()
-    .notEmpty().withMessage('Email is required')
-    .isEmail().withMessage('Please provide a valid email'),
-
-  body('password')
-    .notEmpty().withMessage('Password is required'),
+const restockValidation = [
+  body('quantity')
+    .notEmpty().withMessage('Restock quantity is required')
+    .isFloat({ min: 1 }).withMessage('Restock quantity must be at least 1'),
 ];
 
-// ─── Public Routes ───
-router.post('/register', registerValidation, register);
-router.post('/login', loginValidation, login);
+// All routes require login
+router.use(protect);
 
-// ─── Protected Routes ───
-router.get('/me', protect, getMe);
-router.get('/users', protect, authorize('admin'), getAllUsers);
-router.patch('/users/:id/toggle', protect, authorize('admin'), toggleUserStatus);
+// ─── Routes ───
+router.post('/', authorize('admin'), addItemValidation, addInventoryItem);
+router.get('/alerts/:disasterId', authorize('admin'), getStockAlerts);
+router.get('/:disasterId', authorize('admin', 'ngo'), getInventoryByDisaster);
+router.get('/item/:id', authorize('admin', 'ngo'), getInventoryItemById);
+router.patch('/item/:id', authorize('admin'), updateInventoryItem);
+router.patch('/item/:id/restock', authorize('admin'), restockValidation, restockItem);
+router.delete('/item/:id', authorize('admin'), deleteInventoryItem);
 
 module.exports = router;
