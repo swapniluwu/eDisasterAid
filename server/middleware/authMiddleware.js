@@ -6,9 +6,18 @@ const protect = async (req, res, next) => {
   let token;
 
   // JWT is sent in the Authorization header as: Bearer <token>
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  const authHeader = req.headers.authorization || '';
+
+  if (authHeader) {
     try {
-      token = req.headers.authorization.split(' ')[1];
+      token = authHeader.replace(/^Bearer\s+/i, '').trim();
+
+      // Handle accidental quotes or a pasted prefix in the token field.
+      token = token.replace(/^"|"$/g, '');
+
+      if (!token) {
+        return errorResponse(res, 401, 'Not authorized, no token provided');
+      }
 
       // Verify token and decode payload
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -26,7 +35,12 @@ const protect = async (req, res, next) => {
 
       next();
     } catch (error) {
-      return errorResponse(res, 401, 'Not authorized, token failed');
+      const detail =
+        process.env.NODE_ENV === 'development' && error && error.name
+          ? ` (${error.name}${error.message ? `: ${error.message}` : ''})`
+          : '';
+
+      return errorResponse(res, 401, `Not authorized, token failed${detail}`);
     }
   } else {
     return errorResponse(res, 401, 'Not authorized, no token provided');
