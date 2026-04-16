@@ -11,7 +11,7 @@ const Layout = () => {
       <Navbar onMenuClick={() => setSidebarOpen(true)} />
       <div className="flex">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <main className="flex-1 md:ml-60 min-h-[calc(100vh-4rem)] p-4 md:p-6 lg:p-8">
+        <main className="flex-1 md:ml-60 min-h-[calc(100vh-4rem)] p-3 sm:p-4 md:p-6">
           <div className="max-w-7xl mx-auto page-enter">
             <Outlet />
           </div>
@@ -20,4 +20,5 @@ const Layout = () => {
     </div>
   );
 };
+
 export default Layout;
