@@ -2,7 +2,6 @@ import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix default marker icons broken by webpack
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -10,15 +9,15 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Custom colored markers
 const createIcon = (color) => new L.DivIcon({
   html: `<div style="
-    width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
-    background:${color};border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.2);
+    width:24px;height:24px;border-radius:50% 50% 50% 0;
+    transform:rotate(-45deg);background:${color};
+    border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.25);
   "></div>`,
-  iconSize: [28, 28],
-  iconAnchor: [14, 28],
-  popupAnchor: [0, -32],
+  iconSize: [24, 24],
+  iconAnchor: [12, 24],
+  popupAnchor: [0, -28],
   className: '',
 });
 
@@ -28,72 +27,94 @@ const icons = {
   volunteer: createIcon('#1D9E75'),
 };
 
-const MapView = ({ disasters = [], reliefCenters = [], height = '400px' }) => {
-  // Default center: India
-  const center = disasters.length > 0 && disasters[0].coordinates?.lat
+const MapView = ({ disasters = [], reliefCenters = [], height = '300px' }) => {
+  const center = disasters.length > 0 && disasters[0]?.coordinates?.lat
     ? [disasters[0].coordinates.lat, disasters[0].coordinates.lng]
     : [20.5937, 78.9629];
 
+  const zoom = disasters.length > 0 && disasters[0]?.coordinates?.lat ? 7 : 4;
+
   return (
-    <div className="rounded-2xl overflow-hidden border border-neutral-100" style={{ height }}>
-      <MapContainer center={center} zoom={disasters.length > 0 ? 8 : 5}
-        style={{ height: '100%', width: '100%' }}>
+    <div
+      className="rounded-2xl overflow-hidden border border-neutral-100 w-full"
+      style={{ height }}
+    >
+      <MapContainer
+        center={center}
+        zoom={zoom}
+        scrollWheelZoom={false}
+        style={{ height: '100%', width: '100%' }}
+      >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {disasters.map((d) => d.coordinates?.lat && (
-          <div key={d._id}>
+        {disasters.map((d) =>
+          d.coordinates?.lat ? (
+            <div key={d._id}>
+              <Marker
+                position={[d.coordinates.lat, d.coordinates.lng]}
+                icon={icons.disaster}
+              >
+                <Popup>
+                  <div style={{ fontSize: 13, minWidth: 160 }}>
+                    <p style={{ fontWeight: 600, marginBottom: 2 }}>{d.title}</p>
+                    <p style={{ color: '#888', marginBottom: 4 }}>{d.location}</p>
+                    <p style={{ fontSize: 11 }}>
+                      <span style={{
+                        fontWeight: 600,
+                        color: d.severity === 'critical' ? '#E24B4A'
+                             : d.severity === 'high'     ? '#BA7517' : '#185FA5',
+                        textTransform: 'capitalize',
+                      }}>
+                        {d.severity} severity
+                      </span>
+                      {' · '}{d.type}
+                    </p>
+                    <p style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>
+                      {d.totalVictimsRegistered || 0} victims registered
+                    </p>
+                  </div>
+                </Popup>
+              </Marker>
+              <Circle
+                center={[d.coordinates.lat, d.coordinates.lng]}
+                radius={
+                  d.severity === 'critical' ? 25000
+                  : d.severity === 'high'   ? 15000
+                  : 8000
+                }
+                pathOptions={{
+                  color:       d.severity === 'critical' ? '#E24B4A' : '#185FA5',
+                  fillColor:   d.severity === 'critical' ? '#E24B4A' : '#185FA5',
+                  fillOpacity: 0.07,
+                  weight:      1.5,
+                }}
+              />
+            </div>
+          ) : null
+        )}
+
+        {reliefCenters.map((c, i) =>
+          c.coordinates?.lat ? (
             <Marker
-              position={[d.coordinates.lat, d.coordinates.lng]}
-              icon={icons.disaster}
+              key={i}
+              position={[c.coordinates.lat, c.coordinates.lng]}
+              icon={icons.relief}
             >
               <Popup>
-                <div className="text-sm">
-                  <p className="font-semibold text-neutral-900">{d.title}</p>
-                  <p className="text-neutral-500">{d.location}</p>
-                  <p className="text-xs mt-1">
-                    <span className={`font-semibold capitalize
-                      ${d.severity === 'critical' ? 'text-red-600' :
-                        d.severity === 'high' ? 'text-orange-600' : 'text-blue-600'}`}>
-                      {d.severity} severity
-                    </span>
-                    {' • '}{d.type}
-                  </p>
-                  <p className="text-xs text-neutral-400">{d.totalVictimsRegistered} victims registered</p>
+                <div style={{ fontSize: 13 }}>
+                  <p style={{ fontWeight: 600 }}>{c.name || 'Relief Center'}</p>
+                  <p style={{ color: '#888', fontSize: 11 }}>{c.address}</p>
                 </div>
               </Popup>
             </Marker>
-            {/* Severity radius circle */}
-            <Circle
-              center={[d.coordinates.lat, d.coordinates.lng]}
-              radius={d.severity === 'critical' ? 30000 : d.severity === 'high' ? 20000 : 10000}
-              pathOptions={{
-                color: d.severity === 'critical' ? '#E24B4A' : d.severity === 'high' ? '#BA7517' : '#185FA5',
-                fillColor: d.severity === 'critical' ? '#E24B4A' : '#185FA5',
-                fillOpacity: 0.08,
-                weight: 1.5,
-              }}
-            />
-          </div>
-        ))}
-
-        {reliefCenters.map((c, i) => c.coordinates?.lat && (
-          <Marker key={i}
-            position={[c.coordinates.lat, c.coordinates.lng]}
-            icon={icons.relief}
-          >
-            <Popup>
-              <div className="text-sm">
-                <p className="font-semibold">{c.name || 'Relief Center'}</p>
-                <p className="text-neutral-500 text-xs">{c.address}</p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+          ) : null
+        )}
       </MapContainer>
     </div>
   );
 };
+
 export default MapView;
