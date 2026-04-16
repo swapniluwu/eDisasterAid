@@ -130,7 +130,7 @@ const AdminDisasters = () => {
           <MapPinIcon className="h-5 w-5 text-primary-500" />
           Disaster map
         </h2>
-        <MapView disasters={data?.disasters || []} height="280px" />
+        <MapView disasters={data?.disasters || []} height="240px" />
       </div>
 
       {/* Filters */}
