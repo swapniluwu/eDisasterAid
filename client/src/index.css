@@ -113,3 +113,38 @@
 
 /* Smooth page transitions */
 .page-enter { animation: fadeIn 0.3s ease-out; }
+
+
+/* ── Responsive table scroll ── */
+.table-container {
+  @apply overflow-x-auto rounded-2xl border border-neutral-100;
+}
+.table {
+  @apply w-full text-sm;
+  min-width: 520px;
+}
+
+/* ── Responsive stat grids ── */
+@media (max-width: 480px) {
+  .stat-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+/* ── Map fix on small screens ── */
+.leaflet-container {
+  z-index: 0 !important;
+  border-radius: 12px;
+}
+
+/* ── Prevent text overflow in table cells ── */
+.table td, .table th {
+  @apply whitespace-nowrap;
+}
+.table td.wrap {
+  @apply whitespace-normal;
+}
+
+/* ── Mobile padding fix ── */
+@media (max-width: 640px) {
+  .page-title { @apply text-xl; }
+  .section-title { @apply text-base; }
+}
