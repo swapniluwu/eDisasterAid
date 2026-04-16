@@ -191,7 +191,7 @@ const CitizenDashboard = () => {
       {tab === 'map' && (
         <div className="card p-5">
           <h2 className="section-title mb-4">Active disaster locations & relief centers</h2>
-          <MapView disasters={disasters} height="420px" />
+          <MapView disasters={disasters} height="320px" />
           <div className="mt-4 flex gap-4 text-xs text-neutral-500">
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-danger-400"></div>
