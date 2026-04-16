@@ -69,7 +69,7 @@ const AdminDashboard = () => {
       {/* Map */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="card p-5">
         <h2 className="section-title mb-4">Disaster locations</h2>
-        <MapView disasters={disasters} height="320px" />
+        <MapView disasters={disasters} height="280px" />
       </motion.div>
 
       {/* Charts */}
