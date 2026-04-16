@@ -1,0 +1,11 @@
+import API from './axios';
+export const createDistribution    = (d)    => API.post('/distributions', d);
+export const getDistributions      = (p)    => API.get('/distributions', { params: p });
+export const getDistribution       = (id)   => API.get(`/distributions/${id}`);
+export const getDistByVictim       = (vid)  => API.get(`/distributions/victim/${vid}`);
+export const updateDistStatus      = (id,d) => API.patch(`/distributions/${id}/status`, d);
+export const assignVolunteer       = (id,d) => API.patch(`/distributions/${id}/assign`, d);
+export const cancelDistribution    = (id,d) => API.delete(`/distributions/${id}`, { data: d });
+export const getMyTasks            = (p)    => API.get('/distributions/my-tasks', { params: p });
+export const getMyTracking         = ()     => API.get('/distributions/my-tracking');
+export const getDistStats          = (did)  => API.get(`/distributions/stats/${did}`);
