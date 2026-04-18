@@ -54,7 +54,7 @@ const VolunteerDashboard = () => {
       </motion.div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: 'Assigned',   val: stats.pending || 0,    icon: ClockIcon,       color: 'text-warning-600 bg-warning-50' },
           { label: 'Dispatched', val: stats.inProgress || 0, icon: TruckIcon,       color: 'text-primary-600 bg-primary-50' },
