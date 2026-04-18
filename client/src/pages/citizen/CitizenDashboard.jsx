@@ -61,7 +61,7 @@ const CitizenDashboard = () => {
       </motion.div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3">
         {[
           { label: 'Registrations', val: registrations.length, icon: UserGroupIcon,  color: 'text-primary-600 bg-primary-50' },
           { label: 'Aid in transit', val: pendingDists.length,  icon: TruckIcon,      color: 'text-warning-600 bg-warning-50' },
