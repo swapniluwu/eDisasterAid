@@ -4,28 +4,45 @@ import { getMe } from '../api/auth';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser]       = useState(null);
-  const [token, setToken]     = useState(() => localStorage.getItem('token'));
+  // Initialize user from localStorage immediately — no flash/logout on refresh
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  });
+  const [token, setToken]     = useState(() => localStorage.getItem('token') || null);
   const [loading, setLoading] = useState(true);
 
-  const loadUser = useCallback(async () => {
-    if (!token) { setLoading(false); return; }
+  // Silently verify token in background — don't wipe user unless token is truly invalid
+  const verifyToken = useCallback(async () => {
+    const storedToken = localStorage.getItem('token');
+    if (!storedToken) {
+      setLoading(false);
+      return;
+    }
     try {
       const { data } = await getMe();
-      setUser(data.data.user);
-    } catch {
-      logout();
+      const freshUser = data.data.user;
+      setUser(freshUser);
+      localStorage.setItem('user', JSON.stringify(freshUser));
+    } catch (err) {
+      // Only logout if token is actually invalid (401), not network errors
+      if (err.response?.status === 401) {
+        logout();
+      }
+      // On network error, keep existing user from localStorage
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
-  useEffect(() => { loadUser(); }, [loadUser]);
+  useEffect(() => { verifyToken(); }, [verifyToken]);
 
-  const login = (token, userData) => {
-    localStorage.setItem('token', token);
+  const login = (newToken, userData) => {
+    localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(userData));
-    setToken(token);
+    setToken(newToken);
     setUser(userData);
   };
 
@@ -39,7 +56,7 @@ export const AuthProvider = ({ children }) => {
   const isRole = (...roles) => user && roles.includes(user.role);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, isRole, loadUser }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, isRole, verifyToken }}>
       {children}
     </AuthContext.Provider>
   );
