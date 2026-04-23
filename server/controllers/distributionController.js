@@ -391,11 +391,11 @@ const assignVolunteer = async (req, res, next) => {
   try {
     const { volunteerId } = req.body;
 
-    if (!volunteerId) {
-      return errorResponse(res, 400, 'Volunteer ID is required');
+    // Hard block — must provide a real volunteerId
+    if (!volunteerId || volunteerId === '' || volunteerId === 'null') {
+      return errorResponse(res, 400, 'You must select a volunteer before assigning');
     }
 
-    // Verify volunteer exists and has the right role
     const volunteer = await User.findById(volunteerId);
     if (!volunteer || volunteer.role !== 'volunteer') {
       return errorResponse(res, 404, 'Volunteer not found');
@@ -412,23 +412,48 @@ const assignVolunteer = async (req, res, next) => {
       return errorResponse(res, 404, 'Distribution not found');
     }
 
-    // Can only assign if status is Approved or already Assigned
-    if (!['Approved', 'Assigned'].includes(distribution.status)) {
+    if (['Delivered', 'Closed'].includes(distribution.status)) {
       return errorResponse(
         res, 400,
-        `Cannot assign volunteer to a distribution with status: ${distribution.status}. Distribution must be Approved first.`
+        `Cannot assign volunteer to a ${distribution.status} distribution`
       );
     }
 
     const previousVolunteerId = distribution.assignedVolunteerId;
+
+    // Save volunteer ID
     distribution.assignedVolunteerId = volunteerId;
 
-    // Move to Assigned stage
-    distribution.advanceStage('Assigned', req.user._id, `Assigned to volunteer: ${volunteer.name}`);
+    // Only push Assigned stage if not already there or beyond
+    const stageOrder = ['Submitted','Verified','Approved','Assigned','Dispatched','Delivered','Closed'];
+    const currentIdx = stageOrder.indexOf(distribution.status);
+    const assignedIdx = stageOrder.indexOf('Assigned');
+
+    if (currentIdx < assignedIdx) {
+      // Auto-advance to Assigned
+      for (let i = currentIdx + 1; i <= assignedIdx; i++) {
+        distribution.statusHistory.push({
+          stage: stageOrder[i],
+          changedBy: req.user._id,
+          note: i === assignedIdx
+            ? `Assigned to volunteer: ${volunteer.name}`
+            : 'Auto-advanced on assignment',
+        });
+      }
+      distribution.status = 'Assigned';
+    } else if (currentIdx === assignedIdx) {
+      // Already Assigned — just update volunteer, add a note
+      distribution.statusHistory.push({
+        stage: 'Assigned',
+        changedBy: req.user._id,
+        note: `Volunteer updated to: ${volunteer.name}`,
+      });
+    }
+    // If Dispatched — just update the volunteerId silently
 
     await distribution.save();
 
-    // Update disaster volunteer count if this is a new assignment
+    // Update disaster volunteer count for fresh assignments only
     if (!previousVolunteerId) {
       await DisasterEvent.findByIdAndUpdate(distribution.disasterId, {
         $inc: { totalVolunteersAssigned: 1 },
@@ -439,24 +464,26 @@ const assignVolunteer = async (req, res, next) => {
     await Notification.create({
       recipientId: volunteerId,
       type: 'delivery_assigned',
-      title: 'New Delivery Task Assigned',
-      message: `You have been assigned to deliver ${distribution.quantity} ${distribution.itemId.unit} of ${distribution.itemId.itemName} to ${distribution.victimId.name}.`,
+      title: 'New delivery task assigned',
+      message: `You have been assigned to deliver ${distribution.quantity} ${distribution.itemId?.unit} of ${distribution.itemId?.itemName} to ${distribution.victimId?.name}.`,
       relatedId: distribution._id,
       relatedCollection: 'Distribution',
     });
 
-    // Notify victim that a volunteer is assigned
-    await Notification.create({
-      recipientId: distribution.victimId.userId,
-      type: 'status_update',
-      title: 'Volunteer Assigned',
-      message: `${volunteer.name} has been assigned to deliver your aid.`,
-      relatedId: distribution._id,
-      relatedCollection: 'Distribution',
-    });
+    // Notify citizen that volunteer is coming
+    if (distribution.victimId?.userId) {
+      await Notification.create({
+        recipientId: distribution.victimId.userId,
+        type: 'status_update',
+        title: 'Volunteer assigned to your delivery',
+        message: `${volunteer.name} has been assigned to deliver your aid. They will contact you soon.`,
+        relatedId: distribution._id,
+        relatedCollection: 'Distribution',
+      });
+    }
 
     await logAction(
-      `Assigned volunteer ${volunteer.name} to distribution for ${distribution.victimId.name}`,
+      `Assigned volunteer ${volunteer.name} to distribution for ${distribution.victimId?.name}`,
       req.user._id,
       distribution._id,
       'Distribution',
@@ -467,7 +494,7 @@ const assignVolunteer = async (req, res, next) => {
     const populated = await Distribution.findById(distribution._id)
       .populate('victimId', 'name phone address')
       .populate('itemId', 'itemName category unit')
-      .populate('assignedVolunteerId', 'name phone skillTags');
+      .populate('assignedVolunteerId', 'name phone skillTags region');
 
     return successResponse(res, 200, 'Volunteer assigned successfully', {
       distribution: populated,
