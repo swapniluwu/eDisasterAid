@@ -83,21 +83,23 @@ const createDistribution = async (req, res, next) => {
     }
 
     // ── Create distribution with initial status history entry ──
-    const distribution = await Distribution.create({
-      victimId,
-      itemId,
-      disasterId,
-      quantity,
-      notes,
-      createdBy: req.user._id,
-      statusHistory: [
-        {
-          stage: 'Submitted',
-          changedBy: req.user._id,
-          note: 'Distribution created by admin',
-        },
-      ],
-    });
+    // ── Create distribution with initial status history entry ──
+const distribution = await Distribution.create({
+  victimId,
+  itemId,
+  disasterId,
+  quantity,
+  notes,
+  createdBy: req.user._id,
+  status: 'Submitted',  // Always start at Submitted
+  statusHistory: [
+    {
+      stage: 'Submitted',
+      changedBy: req.user._id,
+      note: 'Distribution created by admin',
+    },
+  ],
+});
 
     // ── Update disaster distribution count ──
     await DisasterEvent.findByIdAndUpdate(disasterId, {
