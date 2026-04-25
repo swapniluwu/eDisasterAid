@@ -45,7 +45,7 @@ const AdminVictims = () => {
     setActing(true);
     try {
       await verifyVictim(id, { action, adminNotes: notes });
-      toast.success(⁠ Registration ${action === 'approve' ? 'approved ✓' : 'rejected'} ⁠);
+      toast.success(`Registration ${action === 'approve' ? 'approved ✓' : 'rejected'}`);
       refetch();
       setModal(null);
       setNotes('');
@@ -81,10 +81,10 @@ const AdminVictims = () => {
       {/* Summary chips */}
       <div className="flex gap-2 flex-wrap">
         {[
-          { label: ⁠ All (${victims.length}) ⁠,            val: '' },
-          { label: ⁠ Pending (${statusBadgeCount.pending}) ⁠,   val: 'pending',  color: 'bg-warning-50 text-warning-700 border-warning-200' },
-          { label: ⁠ Verified (${statusBadgeCount.verified}) ⁠, val: 'verified', color: 'bg-success-50 text-success-700 border-success-200' },
-          { label: ⁠ Rejected (${statusBadgeCount.rejected}) ⁠, val: 'rejected', color: 'bg-danger-50 text-danger-700 border-danger-200' },
+          { label: `All (${victims.length})`,            val: '' },
+          { label: `Pending (${statusBadgeCount.pending})`,   val: 'pending',  color: 'bg-warning-50 text-warning-700 border-warning-200' },
+          { label: `Verified (${statusBadgeCount.verified})`, val: 'verified', color: 'bg-success-50 text-success-700 border-success-200' },
+          { label: `Rejected (${statusBadgeCount.rejected})`, val: 'rejected', color: 'bg-danger-50 text-danger-700 border-danger-200' },
         ].map(({ label, val, color }) => (
           <button key={val} onClick={() => setStatus(val)}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all
@@ -389,8 +389,8 @@ const AdminVictims = () => {
               </h3>
               <p className="text-sm text-neutral-500 mb-4">
                 {actionModal.action === 'approve'
-                  ? ⁠ Approving ${actionModal.name} will add them to the priority distribution queue. ⁠
-                  : ⁠ Rejecting ${actionModal.name} will notify them and exclude them from the queue. ⁠
+                  ? `Approving ${actionModal.name} will add them to the priority distribution queue.`
+                  : `Rejecting ${actionModal.name} will notify them and exclude them from the queue.`
                 }
               </p>
 
@@ -416,7 +416,7 @@ const AdminVictims = () => {
                 <button
                   onClick={() => handleVerify(actionModal.id, actionModal.action)}
                   disabled={acting}
-                  className={⁠ flex-1 ${actionModal.action === 'approve' ? 'btn-success' : 'btn-danger'} ⁠}
+                  className={`flex-1 ${actionModal.action === 'approve' ? 'btn-success' : 'btn-danger'}`}
                 >
                   {acting
                     ? 'Processing...'
