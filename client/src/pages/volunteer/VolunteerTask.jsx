@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useApi } from '../../hooks/useApi';
+import { usePolling } from '../../hooks/usePolling';
 import { getMyTasks } from '../../api/distributions';
 import { updateDistStatus } from '../../api/distributions';
 import Badge from '../../components/ui/Badge';
@@ -16,9 +17,9 @@ const VolunteerTask = () => {
   const [expanded, setExpanded] = useState(null);
   const [updating, setUpdating] = useState(null);
 
-  const { data, loading, refetch } = useApi(
-    getMyTasks, filter ? { status: filter } : {}, [filter]
-  );
+  const { data, loading, refetch } = usePolling(
+  getMyTasks, filter ? { status: filter } : {}, [filter], 10000);
+  
   const tasks = data?.tasks || [];
 
   const handleUpdate = async (id, status) => {
