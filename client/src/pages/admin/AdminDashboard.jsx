@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useApi } from '../../hooks/useApi';
+import { usePolling } from '../../hooks/usePolling';
 import { getPlatformOverview } from '../../api/analytics';
 import { getDisasters } from '../../api/disasters';
 import { getDashboard } from '../../api/analytics';
@@ -23,7 +24,7 @@ const AdminDashboard = () => {
   const [selectedDisaster, setSelectedDisaster] = useState(null);
 
   const { data: overview, loading: ovLoading } = useApi(getPlatformOverview);
-  const { data: disastersData }                = useApi(getDisasters, { status: 'active' }, []);
+  const { data: disastersData } = usePolling(getDisasters, { status: 'active' }, [], 30000);
   const { data: chartData, loading: chartLoad } = useApi(
     getDashboard,
     selectedDisaster,
