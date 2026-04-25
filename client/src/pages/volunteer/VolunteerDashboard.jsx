@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useApi } from '../../hooks/useApi';
+import { usePolling } from '../../hooks/usePolling';
 import { getMyVolDashboard } from '../../api/volunteers';
 import Badge from '../../components/ui/Badge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -14,7 +15,7 @@ import {
 
 const VolunteerDashboard = () => {
   const { user } = useAuth();
-  const { data, loading, refetch } = useApi(getMyVolDashboard);
+  const { data, loading, refetch } = usePolling(getMyVolDashboard, null, [], 10000);
 
   const stats   = data?.stats   || {};
   const pending = data?.pendingTasks   || [];
