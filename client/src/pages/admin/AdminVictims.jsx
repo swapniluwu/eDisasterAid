@@ -10,6 +10,7 @@ import PriorityBadge from '../../components/ui/PriorityBadge';
 import Badge from '../../components/ui/Badge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { formatDate } from '../../utils/helpers';
+import LiveIndicator from '../../components/ui/LiveIndicator';
 
 const AdminVictims = () => {
   const [search, setSearch]     = useState('');
@@ -72,6 +73,7 @@ const AdminVictims = () => {
           </p>
         </div>
         {/* Live indicator */}
+        <LiveIndicator interval="15s" />
         <div className="flex items-center gap-2 text-xs text-neutral-400">
           <span className="h-2 w-2 rounded-full bg-success-400 animate-pulse-slow inline-block" />
           Auto-refreshing every 20s
