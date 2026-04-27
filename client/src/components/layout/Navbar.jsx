@@ -17,7 +17,6 @@ const Navbar = ({ onMenuClick }) => {
   const navigate = useNavigate();
 
 
-const { user } = useAuth();
 
 const getDashboardPath = () => {
   const paths = {
