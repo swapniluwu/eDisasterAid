@@ -16,6 +16,19 @@ const Navbar = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+
+const { user } = useAuth();
+
+const getDashboardPath = () => {
+  const paths = {
+    admin: '/admin',
+    citizen: '/citizen',
+    volunteer: '/volunteer',
+    ngo: '/ngo',
+  };
+  return paths[user?.role] || '/';
+};
+
   return (
     <motion.header
       initial={{ y: -16, opacity: 0 }}
@@ -34,7 +47,7 @@ const Navbar = ({ onMenuClick }) => {
         </button>
 
         {/* Brand */}
-        <Link to="/" className="flex items-center gap-1.5 flex-shrink-0">
+        <Link to={user ? getDashboardPath() : '/'} className="flex items-center gap-1.5 flex-shrink-0">
           <div className="h-7 w-7 sm:h-8 sm:w-8 bg-primary-600 rounded-lg sm:rounded-xl flex items-center justify-center">
             <ShieldCheckIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
           </div>
