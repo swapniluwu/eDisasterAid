@@ -61,8 +61,7 @@ const Sidebar = ({ open, onClose }) => {
       <aside className={clsx(
         'fixed left-0 bottom-0 w-56 bg-white border-r border-neutral-100 z-40',
         'flex flex-col overflow-y-auto transition-transform duration-300 ease-out',
-        'top-14 sm:top-16',
-        // Mobile: slide in/out. Desktop: always shown
+        'top-14 sm:top-16',  // This stays
         open ? 'translate-x-0 shadow-2xl' : '-translate-x-full',
         'md:translate-x-0 md:shadow-none'
       )}>
