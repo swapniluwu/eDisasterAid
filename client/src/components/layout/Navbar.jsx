@@ -20,7 +20,8 @@ const Navbar = ({ onMenuClick }) => {
     <motion.header
       initial={{ y: -16, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="sticky top-0 z-50 bg-white border-b border-neutral-100 h-14 sm:h-16"
+      className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-neutral-100 h-14 sm:h-16"
+
     >
       <div className="flex items-center h-full px-3 sm:px-4 gap-2">
 
