@@ -31,6 +31,9 @@ import VolunteerTask      from './pages/volunteer/VolunteerTask';
 import NgoDashboard from './pages/ngo/NgoDashboard';
 import NgoDonate    from './pages/ngo/NgoDonate';
 
+//profile page
+import ProfilePage from './pages/shared/ProfilePage';
+
 // ── Protected route wrapper ──
 const Protected = ({ children, roles }) => {
   const { user, loading } = useAuth();
@@ -58,6 +61,9 @@ const AppRoutes = () => (
 
     {/* Protected with sidebar layout */}
     <Route element={<Protected><Layout /></Protected>}>
+
+    {/* Profile — accessible by all logged-in roles */}
+  <Route path="/profile" element={<Protected><ProfilePage /></Protected>} />
 
       {/* Admin */}
       <Route path="/admin" element={<Protected roles={['admin']}><AdminDashboard /></Protected>} />
