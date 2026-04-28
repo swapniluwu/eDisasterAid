@@ -58,6 +58,8 @@
 // router.patch('/users/:id/toggle', protect, authorize('admin'), toggleUserStatus);
 
 // module.exports = router;
+const { errorResponse, successResponse } = require('../utils/apiResponse');
+const User = require('../models/User');
 
 const express = require('express');
 const { body, validationResult } = require('express-validator');
@@ -118,6 +120,34 @@ router.get('/me', protect, getMe);
 router.get('/users', protect, authorize('admin'), getAllUsers);
 router.patch('/users/:id/toggle', protect, authorize('admin'), toggleUserStatus);
 
+// ─── Profile update routes ───
+router.patch('/profile', protect, async (req, res, next) => {
+  try {
+    const { name, phone, region, skillTags } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) return errorResponse(res, 404, 'User not found');
+    if (name)  user.name  = name;
+    if (phone) user.phone = phone;
+    if (region !== undefined) user.region = region;
+    if (skillTags && user.role === 'volunteer') user.skillTags = skillTags;
+    await user.save();
+    return successResponse(res, 200, 'Profile updated', { user });
+  } catch (err) { next(err); }
+});
 
+router.patch('/change-password', protect, async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return errorResponse(res, 400, 'Both current and new password are required');
+    }
+    const user = await User.findById(req.user._id).select('+password');
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) return errorResponse(res, 401, 'Current password is incorrect');
+    user.password = newPassword;
+    await user.save();
+    return successResponse(res, 200, 'Password changed successfully');
+  } catch (err) { next(err); }
+});
 
 module.exports = router;
