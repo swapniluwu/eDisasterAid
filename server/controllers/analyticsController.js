@@ -344,42 +344,41 @@ const getClosureReport = async (req, res, next) => {
         },
       ]),
 
-      // Volunteer performance
-      Distribution.aggregate([
-        {
-          $match: {
-            disasterId: disaster._id,
-            assignedVolunteerId: { $exists: true },
-            status: 'Delivered',
-          },
-        },
-        {
-          $group: {
-            _id: '$assignedVolunteerId',
-            deliveriesCompleted: { $sum: 1 },
-            totalQuantityDelivered: { $sum: '$quantity' },
-          },
-        },
-        {
-          $lookup: {
-            from: 'users',
-            localField: '_id',
-            foreignField: '_id',
-            as: 'volunteer',
-          },
-        },
-        { $unwind: '$volunteer' },
-        {
-          $project: {
-            name: '$volunteer.name',
-            region: '$volunteer.region',
-            deliveriesCompleted: 1,
-            totalQuantityDelivered: 1,
-          },
-        },
-        { $sort: { deliveriesCompleted: -1 } },
-      ]),
-
+      // Volunteer performance — include both Delivered AND Closed (cancelled after delivery)
+Distribution.aggregate([
+  {
+    $match: {
+      disasterId: disaster._id,
+      assignedVolunteerId: { $exists: true, $ne: null },
+      status: { $in: ['Delivered', 'Closed'] }, // Include Closed too
+    },
+  },
+  {
+    $group: {
+      _id: '$assignedVolunteerId',
+      deliveriesCompleted: { $sum: 1 },
+      totalQuantityDelivered: { $sum: '$quantity' },
+    },
+  },
+  {
+    $lookup: {
+      from: 'users',
+      localField: '_id',
+      foreignField: '_id',
+      as: 'volunteer',
+    },
+  },
+  { $unwind: '$volunteer' },
+  {
+    $project: {
+      name: '$volunteer.name',
+      region: '$volunteer.region',
+      deliveriesCompleted: 1,
+      totalQuantityDelivered: 1,
+    },
+  },
+  { $sort: { deliveriesCompleted: -1 } },
+]),
       // Donor contributions
       Inventory.aggregate([
         {
