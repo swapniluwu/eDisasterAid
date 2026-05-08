@@ -61,17 +61,24 @@ const AdminDashboard = () => {
       {ovLoading ? <LoadingSpinner className="py-12" /> : (
   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
     <StatCard label="Victims registered" value={getUserCount('citizen')}
-      icon={UserGroupIcon} color="primary" delay={0}
-      sub="across all disasters" subColor="neutral" />
-    <StatCard label="Distributions" value={distStats.total || 0}
-      icon={TruckIcon} color="warning" delay={0.05}
-      sub={`${distStats.delivered || 0} delivered`} subColor="up" />
-    <StatCard label="Volunteers" value={getUserCount('volunteer')}
-      icon={HandRaisedIcon} color="teal" delay={0.1}
-      sub="registered" subColor="neutral" />
-    <StatCard label="Active disasters" value={disasters.length}
-      icon={MegaphoneIcon} color="danger" delay={0.15}
-      sub="requiring attention" subColor="warn" />
+  icon={UserGroupIcon} color="primary" delay={0}
+  sub="across all disasters" subColor="neutral"
+  to="/admin/victims" />
+
+<StatCard label="Distributions" value={distStats.total || 0}
+  icon={TruckIcon} color="warning" delay={0.05}
+  sub={`${distStats.delivered || 0} delivered`} subColor="up"
+  to="/admin/distributions" />
+
+<StatCard label="Volunteers" value={getUserCount('volunteer')}
+  icon={HandRaisedIcon} color="teal" delay={0.1}
+  sub="registered" subColor="neutral"
+  to="/admin/volunteers" />
+
+<StatCard label="Active disasters" value={disasters.length}
+  icon={MegaphoneIcon} color="danger" delay={0.15}
+  sub="requiring attention" subColor="warn"
+  to="/admin/disasters" />
   </div>
 )}
 

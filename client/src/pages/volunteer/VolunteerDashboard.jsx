@@ -7,6 +7,7 @@ import { usePolling } from '../../hooks/usePolling';
 import { getMyVolDashboard } from '../../api/volunteers';
 import Badge from '../../components/ui/Badge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import StatCard from '../../components/ui/StatCard';
 import PriorityBadge from '../../components/ui/PriorityBadge';
 import { formatDate } from '../../utils/helpers';
 import {
@@ -56,24 +57,17 @@ const VolunteerDashboard = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: 'Assigned',   val: stats.pending || 0,    icon: ClockIcon,       color: 'text-warning-600 bg-warning-50' },
-          { label: 'Dispatched', val: stats.inProgress || 0, icon: TruckIcon,       color: 'text-primary-600 bg-primary-50' },
-          { label: 'Delivered',  val: stats.completed || 0,  icon: CheckCircleIcon, color: 'text-success-600 bg-success-50' },
-          { label: 'Total',      val: stats.totalAssigned||0, icon: MapPinIcon,     color: 'text-neutral-600 bg-neutral-100' },
-        ].map(({ label, val, icon: Icon, color }, i) => (
-          <motion.div key={label}
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.06 }}
-            className="card p-4 text-center"
-          >
-            <div className={`w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center ${color}`}>
-              <Icon className="h-5 w-5" />
-            </div>
-            <p className="font-display font-bold text-2xl text-neutral-900">{val}</p>
-            <p className="text-xs text-neutral-400">{label}</p>
-          </motion.div>
-        ))}
+        <StatCard label="Assigned" value={stats.pending || 0} icon={ClockIcon}
+          color="warning" delay={0} sub="tasks assigned" subColor="neutral" to="/volunteer/tasks" />
+
+        <StatCard label="Dispatched" value={stats.inProgress || 0} icon={TruckIcon}
+          color="primary" delay={0.05} sub="on route" subColor="neutral" to="/volunteer/tasks" />
+
+        <StatCard label="Delivered" value={stats.completed || 0} icon={CheckCircleIcon}
+          color="success" delay={0.1} sub="completed" subColor="info" to="/volunteer/tasks" />
+
+        <StatCard label="Total" value={stats.totalAssigned || 0} icon={MapPinIcon}
+          color="neutral" delay={0.15} sub="all tasks" subColor="neutral" to="/volunteer/tasks" />
       </div>
 
       {/* Pending tasks */}

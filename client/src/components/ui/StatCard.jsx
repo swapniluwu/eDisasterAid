@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
+import { useNavigate } from 'react-router-dom';
 
-const StatCard = ({ label, value, sub, subColor = 'neutral', icon: Icon, color = 'primary', delay = 0 }) => {
+const StatCard = ({ label, value, sub, subColor = 'neutral', icon: Icon, color = 'primary', delay = 0, to }) => {
+  const navigate = useNavigate();
   const colorMap = {
     primary: { bg: 'bg-primary-50', text: 'text-primary-600', icon: 'text-primary-500' },
     danger:  { bg: 'bg-danger-50',  text: 'text-danger-600',  icon: 'text-danger-500'  },
@@ -20,7 +22,11 @@ const StatCard = ({ label, value, sub, subColor = 'neutral', icon: Icon, color =
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay }}
-      className="card p-3 sm:p-4 flex items-start gap-3"
+      onClick={() => to && navigate(to)}
+      className={clsx(
+        'card p-3 sm:p-4 flex items-start gap-3',
+        to && 'cursor-pointer hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 active:scale-95'
+      )}
     >
       {Icon && (
         <div className={clsx('p-2 rounded-xl flex-shrink-0', c.bg)}>

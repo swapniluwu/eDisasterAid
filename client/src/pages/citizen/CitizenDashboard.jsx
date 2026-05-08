@@ -7,6 +7,7 @@ import { getMyRegistrations } from '../../api/victims';
 import { getMyTracking } from '../../api/distributions';
 import { getDisasters } from '../../api/disasters';
 import MapView from '../../components/ui/MapView';
+import StatCard from '../../components/ui/StatCard';
 import Badge from '../../components/ui/Badge';
 import LifecycleBar from '../../components/ui/LifecycleBar';
 import PriorityBadge from '../../components/ui/PriorityBadge';
@@ -62,23 +63,14 @@ const CitizenDashboard = () => {
 
       {/* Stat cards */}
       <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: 'Registrations', val: registrations.length, icon: UserGroupIcon,  color: 'text-primary-600 bg-primary-50' },
-          { label: 'Aid in transit', val: pendingDists.length,  icon: TruckIcon,      color: 'text-warning-600 bg-warning-50' },
-          { label: 'Delivered',      val: deliveredCount,        icon: MapPinIcon,     color: 'text-success-600 bg-success-50' },
-        ].map(({ label, val, icon: Icon, color }, i) => (
-          <motion.div key={label}
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.07 }}
-            className="card p-4 text-center"
-          >
-            <div className={`w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center ${color}`}>
-              <Icon className="h-5 w-5" />
-            </div>
-            <p className="font-display font-bold text-2xl text-neutral-900">{val}</p>
-            <p className="text-xs text-neutral-400 mt-0.5">{label}</p>
-          </motion.div>
-        ))}
+        <StatCard label="Registrations" value={registrations.length} icon={UserGroupIcon}
+          color="primary" delay={0} sub="your registrations" subColor="neutral" to="/citizen/registrations" />
+
+        <StatCard label="Aid in transit" value={pendingDists.length} icon={TruckIcon}
+          color="warning" delay={0.05} sub="pending deliveries" subColor="up" to="/citizen/track" />
+
+        <StatCard label="Delivered" value={deliveredCount} icon={MapPinIcon}
+          color="success" delay={0.1} sub="received" subColor="info" to="/citizen/delivered" />
       </div>
 
       {/* Tabs */}
