@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getMe } from '../api/auth';
+import { getPersistedAuthToken } from '../api/axios';
 
 const AuthContext = createContext(null);
 
@@ -11,12 +12,19 @@ export const AuthProvider = ({ children }) => {
       return stored ? JSON.parse(stored) : null;
     } catch { return null; }
   });
-  const [token, setToken]     = useState(() => localStorage.getItem('token') || null);
-  const [loading, setLoading] = useState(true);
+  const [token, setToken]     = useState(() => getPersistedAuthToken());
+  
+  // If we have both token and user saved, we're ready immediately.
+  // Don't show loading spinner while verifying — keep UI responsive.
+  const [loading, setLoading] = useState(() => {
+    const savedToken = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+    return !(savedToken && savedUser);  // loading = false if both exist
+  });
 
-  // Silently verify token in background — don't wipe user unless token is truly invalid
+  // Silently verify token in background — refresh user data but don't wipe on errors
   const verifyToken = useCallback(async () => {
-    const storedToken = localStorage.getItem('token');
+    const storedToken = getPersistedAuthToken();
     if (!storedToken) {
       setLoading(false);
       return;
@@ -27,11 +35,14 @@ export const AuthProvider = ({ children }) => {
       setUser(freshUser);
       localStorage.setItem('user', JSON.stringify(freshUser));
     } catch (err) {
-      // Only logout if token is actually invalid (401), not network errors
+      // Only logout on genuine 401. Network errors don't clear saved auth.
       if (err.response?.status === 401) {
-        logout();
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setToken(null);
+        setUser(null);
       }
-      // On network error, keep existing user from localStorage
+      // Otherwise silently keep the saved user from localStorage
     } finally {
       setLoading(false);
     }

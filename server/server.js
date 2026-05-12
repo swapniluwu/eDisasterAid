@@ -28,7 +28,7 @@ const app = express();
 
 // ─── Security & Utility Middleware ───
 app.use(helmet());   // Sets secure HTTP headers
-app.use(cors());     // Allow cross-origin (React frontend)
+app.use(cors({ origin: true, credentials: true }));     // Allow authenticated cross-origin requests
 app.use(express.json());           // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 

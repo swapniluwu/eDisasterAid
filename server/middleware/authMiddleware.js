@@ -2,6 +2,27 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { errorResponse } = require('../utils/apiResponse');
 
+const AUTH_TOKEN_COOKIE = 'eDisasterAidToken';
+
+const getCookieToken = (req) => {
+  const cookieHeader = req.headers.cookie || '';
+  const cookies = cookieHeader
+    .split(';')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .reduce((acc, entry) => {
+      const separatorIndex = entry.indexOf('=');
+      if (separatorIndex === -1) return acc;
+      const key = entry.slice(0, separatorIndex);
+      const value = entry.slice(separatorIndex + 1);
+      acc[key] = value;
+      return acc;
+    }, {});
+
+  const token = cookies[AUTH_TOKEN_COOKIE];
+  return token ? decodeURIComponent(token) : null;
+};
+
 const protect = async (req, res, next) => {
   let token;
 
@@ -43,7 +64,33 @@ const protect = async (req, res, next) => {
       return errorResponse(res, 401, `Not authorized, token failed${detail}`);
     }
   } else {
-    return errorResponse(res, 401, 'Not authorized, no token provided');
+    token = getCookieToken(req);
+
+    if (!token) {
+      return errorResponse(res, 401, 'Not authorized, no token provided');
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id).select('-password');
+
+      if (!req.user) {
+        return errorResponse(res, 401, 'User no longer exists');
+      }
+
+      if (!req.user.isActive) {
+        return errorResponse(res, 401, 'Account has been deactivated');
+      }
+
+      next();
+    } catch (error) {
+      const detail =
+        process.env.NODE_ENV === 'development' && error && error.name
+          ? ` (${error.name}${error.message ? `: ${error.message}` : ''})`
+          : '';
+
+      return errorResponse(res, 401, `Not authorized, token failed${detail}`);
+    }
   }
 };
 

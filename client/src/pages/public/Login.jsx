@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { ShieldCheckIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
@@ -7,9 +7,13 @@ import { loginUser } from '../../api/auth';
 import { useAuth } from '../../context/AuthContext';
 
 const Login = () => {
-  const navigate = useNavigate();
-  const { login } = useAuth();
+  const { user, loading: authLoading, login } = useAuth();
   const [form, setForm]         = useState({ email: '', password: '' });
+
+  // If already logged in, don't show login page
+  if (!authLoading && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading]   = useState(false);
 

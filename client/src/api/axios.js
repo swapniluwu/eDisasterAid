@@ -1,4 +1,5 @@
 import axios from 'axios';
+export const getPersistedAuthToken = () => localStorage.getItem('token') || null;
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
@@ -7,20 +8,17 @@ const API = axios.create({
 
 // Attach JWT token to every request automatically
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = getPersistedAuthToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Handle 401 globally — redirect to login
+// Let the auth provider decide when a session is invalid.
+// A generic 401 can also come from a permission check or a temporary API issue,
+// and wiping storage here can make a valid saved session disappear on reload.
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
     return Promise.reject(error);
   }
 );

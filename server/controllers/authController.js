@@ -3,6 +3,29 @@ const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 
+const AUTH_TOKEN_COOKIE = 'eDisasterAidToken';
+
+const getAuthCookieOptions = () => {
+  const options = [
+    `${AUTH_TOKEN_COOKIE}=%s`,
+    'Max-Age=604800',
+    'Path=/',
+    'SameSite=Lax',
+  ];
+
+  if (process.env.NODE_ENV === 'production') {
+    options.push('Secure');
+  }
+
+  return options;
+};
+
+const setAuthCookie = (res, token) => {
+  const cookieParts = getAuthCookieOptions();
+  cookieParts[0] = cookieParts[0].replace('%s', encodeURIComponent(token));
+  res.setHeader('Set-Cookie', cookieParts.join('; '));
+};
+
 // ─────────────────────────────────────────
 // @route   POST /api/auth/register
 // @access  Public
@@ -34,6 +57,7 @@ const register = async (req, res, next) => {
 
     // Generate JWT for immediate login after register
     const token = generateToken(user._id, user.role);
+    setAuthCookie(res, token);
 
     return successResponse(res, 201, 'Account created successfully', {
       token,
@@ -84,6 +108,7 @@ const login = async (req, res, next) => {
     }
 
     const token = generateToken(user._id, user.role);
+    setAuthCookie(res, token);
 
     return successResponse(res, 200, 'Login successful', {
       token,

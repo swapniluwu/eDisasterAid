@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 import {
   ShieldCheckIcon, UserGroupIcon, ArchiveBoxIcon,
   TruckIcon, ChartBarIcon, BellAlertIcon,
@@ -21,7 +22,15 @@ const roles = [
   { role: 'Admin',     desc: 'Manage the full relief operation',     color: 'border-danger-200 bg-danger-50',  badge: 'bg-danger-600 text-white' },
 ];
 
-const Landing = () => (
+const Landing = () => {
+  const { user, loading } = useAuth();
+
+  // If already logged in, skip landing page
+  if (!loading && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return (
   <div className="min-h-screen bg-neutral-50">
     {/* Navbar */}
     <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-neutral-100 px-6 py-4 flex items-center justify-between">
@@ -151,6 +160,7 @@ const Landing = () => (
       e-DisasterAid · BCA Capstone Project · Built with MERN Stack
     </footer>
   </div>
-);
+  );
+};
 
 export default Landing;
